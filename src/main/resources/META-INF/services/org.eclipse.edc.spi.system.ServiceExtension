@@ -1,0 +1,12 @@
+org.eclipse.edc.sample.runtime.SeedVaultExtension
+org.eclipse.edc.extension.asset.SparqlAssetIndexStoreExtension
+org.eclipse.edc.extension.policy.SparqlPolicyDefinitionStoreExtension
+org.eclipse.edc.extension.contract.definition.SparqlContractDefinitionStoreExtension
+org.eclipse.edc.extension.contract.negotiation.SparqlContractNegotiationStoreExtension
+org.eclipse.edc.extension.transfer.SparqlTransferProcessStoreExtension
+org.eclipse.edc.extension.edr.cache.SparqlEndpointDataReferenceCacheStoreExtension
+org.eclipse.edc.extension.edr.entry.SparqlEndpointDataReferenceEntryIndexStoreExtension
+org.eclipse.edc.extension.dataplane.SparqlDataplaneInstanceStoreExtension
+org.eclipse.edc.extension.participant.context.SparqlParticipantContextStoreExtension
+org.eclipse.edc.extension.participant.context.SparqlParticipantContextConfigStoreExtension
+org.eclipse.edc.extension.participant.identity.SparqlParticipantIdentityResolverExtension
