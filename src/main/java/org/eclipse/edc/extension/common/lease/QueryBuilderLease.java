@@ -24,16 +24,20 @@ public class QueryBuilderLease {
                                     String jsonEscaped) {
 
         var hasPc = participantContext != null && !participantContext.isBlank();
+        // Same layout as QueryBuilder (plan decision D52): the meta-subject holds the index fields,
+        // the lease fields and the JSON, and links to the entity subject with edc:unfoldedArtefact.
+        var metaSubject = QueryBuilder.metaSubject(namedGraphIri, entitySubject);
         var pcTriple = hasPc ? "    edc:participantContextId \"" + participantContext + "\" ;\n" : "";
 
         return  "PREFIX edc: <https://w3id.org/edc/v0.0.1/ns/>\n"
                 + "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n"
                 + "DELETE {\n" // TODO: Maybe here remove only relevant triplets, those: edc:id, edc:state, edc:stateTimestamp, and edc:json11Serialization
-                + "  GRAPH <" + namedGraphIri + "> { <" + entitySubject + "> ?p ?o . }\n"
+                + "  GRAPH <" + namedGraphIri + "> { <" + metaSubject + "> ?p ?o . }\n"
                 + "}\n"
                 + "INSERT {\n"
                 + "  GRAPH <" + namedGraphIri + "> {\n"
-                + "    <" + entitySubject + "> a edc:" + storeEntity + " ;\n"
+                + "    <" + metaSubject + "> a edc:" + storeEntity + " ;\n"
+                + "    edc:unfoldedArtefact <" + entitySubject + "> ;\n"
                 + "    edc:id \"" + entitySubject + "\" ;\n"
                 + "    edc:state \"" + stateValue + "\" ;\n"
                 + "    edc:stateTimestamp \"" + timestamp + "\"^^xsd:long ;\n"
@@ -42,7 +46,7 @@ public class QueryBuilderLease {
                 + "  }\n"
                 + "}\n"
                 + "WHERE {\n"
-                + "  OPTIONAL { GRAPH <" + namedGraphIri + "> { <" + entitySubject + "> ?p ?o . } }\n"
+                + "  OPTIONAL { GRAPH <" + namedGraphIri + "> { <" + metaSubject + "> ?p ?o . } }\n"
                 + "}\n";
     }
 

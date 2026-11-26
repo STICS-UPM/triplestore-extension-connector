@@ -38,9 +38,12 @@ public class SparqlStoreLease<T> extends AbstractSparqlStore<T> {
     }
 
 
-    /** Expose entity IRI computation for lease manager usage */
+    /**
+     * Subject that carries the lease fields: the meta-subject written by internalUpsertLease (D52),
+     * so that leases taken by id land on the same node as those taken by state.
+     */
     public String entityIri(String entityId) {
-        return ensureIsIRI(entityId);
+        return QueryBuilder.metaSubject(namedGraphIri, ensureIsIRI(entityId));
     }
 
     public void internalUpsertLease(String entityId, String json, int state, long stateTimestamp, String participantContextId) {

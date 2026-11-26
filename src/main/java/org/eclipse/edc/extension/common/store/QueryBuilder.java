@@ -26,11 +26,20 @@ public class QueryBuilder {
         return this.storeEntity;
     }
 
+    /**
+     * Meta-subject of an entity: the control node that holds the JSON serialization and links,
+     * through edc:unfoldedArtefact, to the entity's own subject. Every read, existence check,
+     * delete and write uses GRAPH <namedGraphIri> { <metaSubject> ... }.
+     */
+    public static String metaSubject(String namedGraphIri, String subjectIri) {
+        return namedGraphIri + ":" + subjectIri;
+    }
+
     public static String findByIdQuery(String graphIri, String subject) {
         StringBuilder query = new StringBuilder();
         query.append("PREFIX edc: <").append(EDC_NS).append(">");
         query.append( "SELECT ?json WHERE {\n GRAPH <").append(graphIri).append("> {");
-        query.append(" <").append(subject).append("> edc:json11Serialization ?json . ");
+        query.append(" <").append(metaSubject(graphIri, subject)).append("> edc:json11Serialization ?json . ");
         query.append(" } } LIMIT 1 ");
         return query.toString();
     }
@@ -40,8 +49,9 @@ public class QueryBuilder {
         StringBuilder query = new StringBuilder();
         query.append("PREFIX edc: <").append(EDC_NS).append(">");
         query.append(" WITH <").append(graphIri).append("> ");
-        query.append(" DELETE { <").append(subject).append("> ?p ?o . } ");
-        query.append(" WHERE  { <").append(subject).append("> ?p ?o . } ");
+        String meta = metaSubject(graphIri, subject);
+        query.append(" DELETE { <").append(meta).append("> ?p ?o . } ");
+        query.append(" WHERE  { <").append(meta).append("> ?p ?o . } ");
         return query.toString();
     }
 
@@ -62,7 +72,7 @@ public class QueryBuilder {
 
     public String buildUpdateQuery(String namedGraphIri, String subjectIri, String jsonEscaped) {
         StringBuilder queryUpdate = new StringBuilder();
-        String metaPolicyIri = namedGraphIri+":"+subjectIri;
+        String metaPolicyIri = metaSubject(namedGraphIri, subjectIri);
 
         queryUpdate.append("PREFIX edc: <").append(EDC_NS).append(">\n");
         queryUpdate.append("PREFIX rdf: <").append(RDF.uri).append(">\n");
@@ -73,20 +83,20 @@ public class QueryBuilder {
         queryUpdate.append("\tedc:unfoldedArtefact  <").append(subjectIri).append("> ;\n");
         queryUpdate.append("\tedc:json11Serialization \"").append(jsonEscaped).append("\" .\n");
 
-        queryUpdate.append("}  WHERE {  OPTIONAL { <").append(subjectIri).append("> ?p ?o . }  }");
+        queryUpdate.append("}  WHERE {  OPTIONAL { <").append(metaPolicyIri).append("> ?p ?o . }  }");
 
         return queryUpdate.toString();
     }
 
     public String findById(String namedGraphIri, String entitySubject) {
         StringBuilder query = new StringBuilder();
-        String metaPolicyIri = namedGraphIri+":"+entitySubject;
+        String metaPolicyIri = metaSubject(namedGraphIri, entitySubject);
 
         query.append("PREFIX edc: <").append(EDC_NS).append(">\n");
         query.append("PREFIX rdf: <").append(RDF.uri).append(">\n");
         query.append("SELECT ?json WHERE {\n");
-        query.append("  GRAPH <").append(metaPolicyIri).append("> {\n" );
-        query.append("    <").append(entitySubject).append("> ").append(VOCABULAY_SEDC_JSON11SERILIZATION_PROPERTY).append(" ?json .\n");
+        query.append("  GRAPH <").append(namedGraphIri).append("> {\n" );
+        query.append("    <").append(metaPolicyIri).append("> ").append(VOCABULAY_SEDC_JSON11SERILIZATION_PROPERTY).append(" ?json .\n");
         query.append("  }\n");
         query.append("} LIMIT 1");
 
@@ -95,7 +105,7 @@ public class QueryBuilder {
 
     public String findByIdASK(String namedGraphIri, String entitySubject) {
         StringBuilder query = new StringBuilder();
-        String metaPolicyIri = namedGraphIri+":"+entitySubject;
+        String metaPolicyIri = metaSubject(namedGraphIri, entitySubject);
 
         query.append("PREFIX edc: <").append(EDC_NS).append(">\n");
         query.append("PREFIX rdf: <").append(RDF.uri).append(">\n");
