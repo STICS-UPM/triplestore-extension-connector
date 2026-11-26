@@ -16,7 +16,7 @@ public class QueryBuilderLease {
 
 
 
-    public String updateEntityLease(String nameGraphIri,
+    public String updateEntityLease(String namedGraphIri,
                                     String entitySubject,
                                     String stateValue,
                                     String timestamp,
@@ -29,10 +29,10 @@ public class QueryBuilderLease {
         return  "PREFIX edc: <https://w3id.org/edc/v0.0.1/ns/>\n"
                 + "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n"
                 + "DELETE {\n" // TODO: Maybe here remove only relevant triplets, those: edc:id, edc:state, edc:stateTimestamp, and edc:json11Serialization
-                + "  GRAPH <" + nameGraphIri + "> { <" + entitySubject + "> ?p ?o . }\n"
+                + "  GRAPH <" + namedGraphIri + "> { <" + entitySubject + "> ?p ?o . }\n"
                 + "}\n"
                 + "INSERT {\n"
-                + "  GRAPH <" + nameGraphIri + "> {\n"
+                + "  GRAPH <" + namedGraphIri + "> {\n"
                 + "    <" + entitySubject + "> a edc:" + storeEntity + " ;\n"
                 + "    edc:id \"" + entitySubject + "\" ;\n"
                 + "    edc:state \"" + stateValue + "\" ;\n"
@@ -42,7 +42,7 @@ public class QueryBuilderLease {
                 + "  }\n"
                 + "}\n"
                 + "WHERE {\n"
-                + "  OPTIONAL { GRAPH <" + nameGraphIri + "> { <" + entitySubject + "> ?p ?o . } }\n"
+                + "  OPTIONAL { GRAPH <" + namedGraphIri + "> { <" + entitySubject + "> ?p ?o . } }\n"
                 + "}\n";
     }
 
@@ -51,13 +51,13 @@ public class QueryBuilderLease {
     /**
      * Deprecated helper: selects candidate ids ordered by stateTimestamp ASC that are not leased (or lease expired).
      *
-     * IMPORTANT: this assumes leases are written in the SAME graph as the entities (nameGraphIri),
+     * IMPORTANT: this assumes leases are written in the SAME graph as the entities (namedGraphIri),
      * because your SparqlLeaseManager stores edc:leaseUntil etc. in indexGraphIri and you are passing the entity graph.
      *
      * If you still use a separate lease graph, you must keep the join. Otherwise, remove leaseGraphIri/leaseBaseIri.
      */
     @Deprecated
-    public String nextNotLeaseIds(String nameGraphIri,
+    public String nextNotLeaseIds(String namedGraphIri,
                                   String states,
                                   String leaseGraphIri,
                                   String leaseBaseIri,
@@ -76,7 +76,7 @@ public class QueryBuilderLease {
                 + "PREFIX edc: <https://w3id.org/edc/v0.0.1/ns/>\n"
                 + "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n"
                 + "SELECT ?id ?ts WHERE {\n"
-                + "  GRAPH <" + nameGraphIri + "> {\n"
+                + "  GRAPH <" + namedGraphIri + "> {\n"
                 + "    VALUES ?st { " + values + " }\n"
                 + "    ?e edc:id ?id ;\n"
                 + "       edc:state ?s ;\n"
@@ -84,7 +84,7 @@ public class QueryBuilderLease {
                 + "    FILTER(?s = ?st)\n"
                 + "  }\n"
                 + "  OPTIONAL {\n"
-                + "    GRAPH <" + nameGraphIri + "> { ?e edc:leaseUntil ?u }\n"
+                + "    GRAPH <" + namedGraphIri + "> { ?e edc:leaseUntil ?u }\n"
                 + "  }\n"
                 + "  FILTER(!BOUND(?u) || ?u < NOW())\n"
                 + "}\n"

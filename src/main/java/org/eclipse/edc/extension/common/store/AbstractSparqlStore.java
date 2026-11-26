@@ -15,24 +15,24 @@ public abstract class AbstractSparqlStore<T> {
 
     protected final ISparqlClient sparqlClient;
     protected final TypeManager typeManager;
-    protected final String nameGraphIri;
+    protected final String namedGraphIri;
     protected final String baseNsIri;
     protected final Monitor monitor;
     protected final QueryBuilder queryBuilder;
 
-    public AbstractSparqlStore(ISparqlClient sparqlClient, TypeManager typeManager, String nameGraphIri, String baseNsIri, Monitor monitor, StoreEntity storeEntity) {
+    public AbstractSparqlStore(ISparqlClient sparqlClient, TypeManager typeManager, String namedGraphIri, String baseNsIri, Monitor monitor, StoreEntity storeEntity) {
         this.monitor = monitor;
         this.sparqlClient = Objects.requireNonNull(sparqlClient);
         this.typeManager =  Objects.requireNonNull(typeManager);
         // Named Graph IRI
-        this.nameGraphIri =  Objects.requireNonNull(nameGraphIri);
+        this.namedGraphIri =  Objects.requireNonNull(namedGraphIri);
         // Default IRI (base)
         this.baseNsIri = Objects.requireNonNull(baseNsIri);
         queryBuilder = new QueryBuilder(storeEntity);
     }
 
    public String getNamedGraphIri() {
-        return nameGraphIri;
+        return namedGraphIri;
    }
 
    public String getBaseNsIri() {
@@ -88,6 +88,25 @@ public abstract class AbstractSparqlStore<T> {
         return result;
     }
 
+    /**
+     * Escapes a value so it can be placed inside a SPARQL string literal.
+     * Callers add the surrounding quotes themselves (see QueryBuilderLease#updateEntityLease).
+     */
+    protected String sparqlString(String value) {
+        if (value == null) {
+            return "";
+        }
+        return escapeStringForQuery(value);
+    }
+
+    /**
+     * Returns the IRI used as subject for an entity id: the id itself if it is already a URL,
+     * otherwise the base namespace followed by the id.
+     */
+    protected String ensureIsIRI(String entityId) {
+        return isValidURI(entityId);
+    }
+
     /** Query methods **/
 
     protected void internalUpsert(String entityId, T instance){
@@ -95,9 +114,9 @@ public abstract class AbstractSparqlStore<T> {
         validateEntityId(entityId);
         String entityIri = isValidURI(entityId);
         String rawJsonLd11 = toJson(instance);
-        monitor.info("AbstractSparqlStore (internalUpsert): update graph <"+this.nameGraphIri+"> subject : <"+entityIri+">");
+        monitor.info("AbstractSparqlStore (internalUpsert): update graph <"+this.namedGraphIri+"> subject : <"+entityIri+">");
         // TODO: INSERT VALIDATION HERE
-        String query = queryBuilder.buildUpdateQuery(nameGraphIri, entityIri, rawJsonLd11);
+        String query = queryBuilder.buildUpdateQuery(namedGraphIri, entityIri, rawJsonLd11);
         monitor.info("SparqlStore (internalUpsert:"+queryBuilder.getStoreEntity()+"): " + query);
         sparqlClient.sparqlUpdate(query);
     }
@@ -107,8 +126,8 @@ public abstract class AbstractSparqlStore<T> {
         // TODO: Check if entityId is an IRI or rely on the base namespace
         validateEntityId(entityId);
         String entityIri = isValidURI(entityId);
-        monitor.info("AbstractSparqlStore (internalFindById): query graph <"+this.nameGraphIri+"> subject : <"+entityIri+">");
-        String query = queryBuilder.findById(this.nameGraphIri, entityIri);
+        monitor.info("AbstractSparqlStore (internalFindById): query graph <"+this.namedGraphIri+"> subject : <"+entityIri+">");
+        String query = queryBuilder.findById(this.namedGraphIri, entityIri);
         String json = sparqlClient.sparqlSelect(query);
         String bindindedValue = SparqlResultsJson.firstBindingValue(json, "json");
 
@@ -122,8 +141,8 @@ public abstract class AbstractSparqlStore<T> {
     protected boolean internalAskIfExistsById(String entityId){
         validateEntityId(entityId);
         String entityIri = isValidURI(entityId);
-        monitor.info("AbstractSparqlStore (internalAskIfExistsById): query graph <"+this.nameGraphIri+"> subject : <"+entityIri+">");
-        String query = queryBuilder.findByIdASK(this.nameGraphIri, entityIri);
+        monitor.info("AbstractSparqlStore (internalAskIfExistsById): query graph <"+this.namedGraphIri+"> subject : <"+entityIri+">");
+        String query = queryBuilder.findByIdASK(this.namedGraphIri, entityIri);
         String queryResult = sparqlClient.sparqlSelect(query);
         this.monitor.info("[TOREMOVE] AbstractSparqlStore (quickExists): bindedValue"+queryResult);
         return queryResult.contains("true");
@@ -132,9 +151,9 @@ public abstract class AbstractSparqlStore<T> {
     protected Stream<T> internalFindAll(QuerySpec querySpecification, Class<T> clazz){
         Integer limit = querySpecification != null && querySpecification.getLimit() > 0 ? querySpecification.getLimit() : null;
         Integer offset = querySpecification != null && querySpecification.getOffset() > 0 ? querySpecification.getOffset() : null;
-
-        monitor.info("AbstractSparqlStore (internalFindAll): query graph <"+this.nameGraphIri+"> ");
-        String query = queryBuilder.findAllJsonLd(this.nameGraphIri, offset, limit);
+//TO_DO: Add filtering by criteria, ordering, etc. (see QuerySpec)
+        monitor.info("AbstractSparqlStore (internalFindAll): query graph <"+this.namedGraphIri+"> ");
+        String query = queryBuilder.findAllJsonLd(this.namedGraphIri, offset, limit);
         monitor.info("AbstractSparqlStore (internalFindAll) query: " + query);
         String jsonResults = sparqlClient.sparqlSelect(query);
 
@@ -153,9 +172,9 @@ public abstract class AbstractSparqlStore<T> {
     protected void internalDelete(String entityId){
         validateEntityId(entityId);
         String entityIri = isValidURI(entityId);
-        monitor.info("AbstractSparqlStore (internalDelete): query graph <"+this.nameGraphIri+"> subject : <"+entityIri+">");
+        monitor.info("AbstractSparqlStore (internalDelete): query graph <"+this.namedGraphIri+"> subject : <"+entityIri+">");
 
-        var update = queryBuilder.deleteById(nameGraphIri, entityIri);
+        var update = queryBuilder.deleteById(namedGraphIri, entityIri);
         monitor.info("QUERY (delete): " + update);
 
         sparqlClient.sparqlUpdate(update);

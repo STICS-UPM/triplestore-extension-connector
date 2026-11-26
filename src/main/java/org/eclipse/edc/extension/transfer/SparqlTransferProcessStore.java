@@ -207,12 +207,13 @@ public class SparqlTransferProcessStore implements TransferProcessStore {
     }
 
     @Override
-    public void delete(String processId) {
+    public StoreResult<Void> delete(String processId) {
         if (processId == null || processId.isBlank()) {
-            return;
+            return StoreResult.notFound("TransferProcess id must not be null or blank");
         }
         transferStore.deleteByIdInternal(processId);
         leaseManager.breakLease(leaseGraphIri, processId, null);
+        return StoreResult.success();
     }
 
     @Override

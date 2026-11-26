@@ -32,8 +32,8 @@ public class SparqlStoreLease<T> extends AbstractSparqlStore<T> {
 
     private final QueryBuilderLease queryBuilderLease;
 
-    public SparqlStoreLease(ISparqlClient sparqlClient, TypeManager typeManager, String nameGraphIri, String baseNsIri, Monitor monitor, StoreEntity storeEntity) {
-        super(sparqlClient, typeManager, nameGraphIri, baseNsIri, monitor, storeEntity);
+    public SparqlStoreLease(ISparqlClient sparqlClient, TypeManager typeManager, String namedGraphIri, String baseNsIri, Monitor monitor, StoreEntity storeEntity) {
+        super(sparqlClient, typeManager, namedGraphIri, baseNsIri, monitor, storeEntity);
         this.queryBuilderLease = new QueryBuilderLease(storeEntity);
     }
 
@@ -48,7 +48,7 @@ public class SparqlStoreLease<T> extends AbstractSparqlStore<T> {
         var stateValue = String.valueOf(state);
         String participantContext = sparqlString((Optional.ofNullable(participantContextId).orElse("")));
 
-        var query = this.queryBuilderLease.updateEntityLease(this.nameGraphIri, entitySubject, stateValue, String.valueOf(stateTimestamp), participantContext, json);
+        var query = this.queryBuilderLease.updateEntityLease(this.namedGraphIri, entitySubject, stateValue, String.valueOf(stateTimestamp), participantContext, json);
         this.monitor.info("AbstractSparqlStoreLease (internalUpsertLease): "+query);
         this.sparqlClient.sparqlUpdate(query);
     }
@@ -68,7 +68,7 @@ public class SparqlStoreLease<T> extends AbstractSparqlStore<T> {
     ) {
         var states = String.join(" ", java.util.Arrays.stream(allowedStates).mapToObj(String::valueOf).toList());
         String limitStr = String.valueOf(limit);
-        var query = this.queryBuilderLease.nextNotLeaseIds(this.nameGraphIri, states, leaseGraphIri, sparqlString(leaseBaseIri), now.toString(), limitStr);
+        var query = this.queryBuilderLease.nextNotLeaseIds(this.namedGraphIri, states, leaseGraphIri, sparqlString(leaseBaseIri), now.toString(), limitStr);
         this.monitor.info("AbstractSparqlStoreLease (nextNotLeasedIds): "+query);
         return sparqlClient.selectColumnAsStream(query, "id");
     }
@@ -103,7 +103,7 @@ public class SparqlStoreLease<T> extends AbstractSparqlStore<T> {
     }
 
     public String graphIri() {
-        return nameGraphIri;
+        return namedGraphIri;
     }
 
     public void sparqlUpdate(String update) {

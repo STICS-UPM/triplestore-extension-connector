@@ -78,13 +78,14 @@ public class QueryBuilder {
         return queryUpdate.toString();
     }
 
-    public String findById(String nameGraphIri, String entitySubject) {
+    public String findById(String namedGraphIri, String entitySubject) {
         StringBuilder query = new StringBuilder();
+        String metaPolicyIri = namedGraphIri+":"+entitySubject;
 
         query.append("PREFIX edc: <").append(EDC_NS).append(">\n");
         query.append("PREFIX rdf: <").append(RDF.uri).append(">\n");
         query.append("SELECT ?json WHERE {\n");
-        query.append("  GRAPH <").append(nameGraphIri).append("> {\n" );
+        query.append("  GRAPH <").append(metaPolicyIri).append("> {\n" );
         query.append("    <").append(entitySubject).append("> ").append(VOCABULAY_SEDC_JSON11SERILIZATION_PROPERTY).append(" ?json .\n");
         query.append("  }\n");
         query.append("} LIMIT 1");
@@ -92,14 +93,15 @@ public class QueryBuilder {
         return query.toString();
     }
 
-    public String findByIdASK(String nameGraphIri, String entitySubject) {
+    public String findByIdASK(String namedGraphIri, String entitySubject) {
         StringBuilder query = new StringBuilder();
+        String metaPolicyIri = namedGraphIri+":"+entitySubject;
 
         query.append("PREFIX edc: <").append(EDC_NS).append(">\n");
         query.append("PREFIX rdf: <").append(RDF.uri).append(">\n");
         query.append("ASK {\n");
-        query.append("  GRAPH <").append(nameGraphIri).append("> {\n" );
-        query.append("    <").append(entitySubject).append("> ").append(VOCABULAY_SEDC_JSON11SERILIZATION_PROPERTY).append(" ?json .\n");
+        query.append("  GRAPH <").append(namedGraphIri).append("> {\n" );
+        query.append("    <").append(metaPolicyIri).append("> ").append(VOCABULAY_SEDC_JSON11SERILIZATION_PROPERTY).append(" ?json .\n");
         query.append("  }\n");
         query.append("} LIMIT 1");
 
